@@ -7,16 +7,6 @@
  */
 
 /**
- * Implementation of hook_help().
- */
-function rolereference_help($section) {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('<strong>CCK:</strong> Defines a field type for referencing roles. <em>Note: Requires content.module.</em>');
-  }
-}
-
-/**
  * Implementation of hook_field_info().
  */
 function rolereference_field_info() {
@@ -93,8 +83,8 @@ function rolereference_field_formatter($field, $item, $formatter, $role) {
   $text = '';
   if (isset($item['rid'])) {
     $roles = _rolereference_get_roles();
-    $referenced_role = $roles[$item['rid']];
-    if ($referenced_role) {
+    $referenced_role = $roles[ $item['rid'] ];
+    if ( $referenced_role ) {
       $text = $referenced_role;
     }
   }

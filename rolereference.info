@@ -1,0 +1,5 @@
+; $Id$
+name = Role Reference
+description = Defines a field type for referencing roles.
+package = CCK
+dependencies = content
