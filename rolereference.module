@@ -1,0 +1,161 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Defines a field type for referencing a role.
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function rolereference_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('<strong>CCK:</strong> Defines a field type for referencing roles. <em>Note: Requires content.module.</em>');
+  }
+}
+
+/**
+ * Implementation of hook_field_info().
+ */
+function rolereference_field_info() {
+  return array(
+    'rolereference' => array('label' => 'Role Reference'),
+  );
+}
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function rolereference_field_settings($op, $field) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      return $form;
+
+    case 'save':
+      return array('referenceable_types');
+
+    case 'database columns':
+      $columns = array(
+        'rid' => array('type' => 'int', 'not null' => TRUE, 'default' => '0', 'sortable' => TRUE),
+      );
+      return $columns;
+  }
+}
+
+/**
+ * Return an array of all roles
+ */
+function _rolereference_get_roles() {
+  $roles_list = array();
+  $result = db_query('SELECT rid, name FROM {role} ORDER BY name');
+  while ($obj = db_fetch_object($result)) {
+    $roles_list[$obj->rid] = t($obj->name);
+  }
+  return $roles_list;
+}
+
+/**
+ * Implementation of hook_field().
+ */
+function rolereference_field($op, &$role, $field, &$items, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+      foreach ($items as $delta => $item) {
+        $items[$delta]['view'] = content_format($field, $item, 'default', $role);
+      }
+      return theme('field', $role, $field, $items, $teaser, $page);
+  }
+}
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function rolereference_field_formatter_info() {
+  return array(
+    'default' => array(
+      'label' => 'Default',
+      'field types' => array('rolereference'),
+    ),
+    'plain' => array(
+      'label' => 'Plain text',
+      'field types' => array('rolereference'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_field_formatter().
+ */
+function rolereference_field_formatter($field, $item, $formatter, $role) {
+  $text = '';
+  if (isset($item['rid'])) {
+    $roles = _rolereference_get_roles();
+    $referenced_role = $roles[$item['rid']];
+    if ($referenced_role) {
+      $text = $referenced_role;
+    }
+  }
+
+  switch ($formatter) {
+    case 'plain':
+      return strip_tags($text);
+
+    default:
+      return $text;
+  }
+}
+
+/**
+ * Implementation of hook_widget_info().
+ */
+function rolereference_widget_info() {
+  return array(
+    'rolereference_select' => array(
+      'label' => 'Select List',
+      'field types' => array('rolereference'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_widget().
+ */
+function rolereference_widget($op, &$role, $field, &$role_field) {
+  if ($field['widget']['type'] == 'rolereference_select') {
+    switch ($op) {
+      case 'prepare form values':
+        $role_field_transposed = content_transpose_array_rows_cols($role_field);
+        $role_field['default rids'] = $role_field_transposed['rid'];
+        break;
+
+      case 'form':
+        $form = array();
+
+        $form[$field['field_name']] = array('#tree' => TRUE);
+        $form[$field['field_name']]['rids'] = array(
+          '#type' => 'select',
+          '#title' => t($field['widget']['label']),
+          '#default_value' => $role_field['default rids'],
+          '#multiple' => $field['multiple'],
+          '#options' => _rolereference_get_roles(),
+          '#required' => $field['required'],
+          '#description' => $field['widget']['description'],
+        );
+
+        return $form;
+
+      case 'process form values':
+        if ($field['multiple']) {
+          $role_field = content_transpose_array_rows_cols(array('rid' => $role_field['rids']));
+        }
+        else {
+          $role_field[0]['rid'] = $role_field['rids'];
+        }
+        // Remove the widget's data representation so it isn't saved.
+        unset($role_field['rids']);
+    }
+  }
+}
