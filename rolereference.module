@@ -37,17 +37,6 @@ function rolereference_theme() {
     'rolereference_formatter_default' => array(
       'arguments' => array('element'),
     ),
-    'rolereference_formatter_plain' => array(
-      'arguments' => array('element'),
-    ),
-    'rolereference_formatter_full' => array(
-      'arguments' => array('element'),
-      'function' => 'theme_rolereference_formatter_full_teaser',
-    ),
-    'rolereference_formatter_teaser' => array(
-      'arguments' => array('element'),
-      'function' => 'theme_rolereference_formatter_full_teaser',
-    ),
   );
 }
 
@@ -86,7 +75,7 @@ function rolereference_field_settings($op, $field) {
 
     case 'database columns':
       $columns = array(
-        'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE),
+        'rid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE),
       );
       return $columns;
 
@@ -97,7 +86,7 @@ function rolereference_field_settings($op, $field) {
 
       // Filter: swap the handler to the 'in' operator.
       $data[$table_alias][$field['field_name'] .'_rid']['filter']['handler'] = 'content_handler_filter_many_to_one';
-      // Argument: use node.title for summaries.
+      // Argument: use role.name for summaries.
       $data[$table_alias][$field['field_name'] .'_rid']['argument']['name table'] = 'role';
       $data[$table_alias][$field['field_name'] .'_rid']['argument']['name field'] = 'name';
       // Relationship: add a relationship for related node.
@@ -109,33 +98,6 @@ function rolereference_field_settings($op, $field) {
         'content_field_name' => $field['field_name'],
       );
       return $data;
-  }
-}
-
-/**
- * Implementation of hook_field().
- */
-function rolereference_field($op, &$node, $field, &$items, $teaser, $page) {
-  switch ($op) {
-    case 'validate':
-      // Extract rids to check.
-      $ids = array();
-      foreach ($items as $delta => $item) {
-        if (is_array($item) && !empty($item['nid']) && is_numeric($item['nid'])) {
-          $ids[] = $item['nid'];
-        }
-      }
-      $refs = _rolereference_potential_references($field);
-      foreach ($items as $delta => $item) {
-        if (is_array($item)) {
-          $error_element = isset($item['_error_element']) ? $item['_error_element'] : '';
-          if (is_array($item) && isset($item['_error_element'])) unset($item['_error_element']);
-          if (!empty($item['rid']) && !isset($refs[$item['rid']])) {
-            form_set_error($error_element, t("%name: this role can't be referenced.", array('%name' => t($field['widget']['label']))));
-          }
-        }
-      }
-      return $items;
   }
 }
 
@@ -154,7 +116,7 @@ function rolereference_content_is_empty($item, $field) {
  */
 function rolereference_field_formatter_info() {
   return array(
-    'plain' => array(
+    'default' => array(
       'label' => t('Title (no link)'),
       'field types' => array('rolereference'),
       'multiple values' => CONTENT_HANDLE_CORE,
@@ -163,9 +125,9 @@ function rolereference_field_formatter_info() {
 }
 
 /**
- * Theme function for 'plain' rolereference field formatter.
+ * Theme function for 'default' rolereference field formatter.
  */
-function theme_rolereference_formatter_plain($element) {
+function theme_rolereference_formatter_default($element) {
   $output = '';
   if (!empty($element['#item']['rid']) && is_numeric($element['#item']['rid']) && ($name = _rolereference_names($element['#item']['rid']))) {
     $output = check_plain($name);
@@ -176,7 +138,7 @@ function theme_rolereference_formatter_plain($element) {
 /**
  * Helper function for formatters.
  *
- * Store node titles collected in the curent request.
+ * Store role names collected in the current request.
  */
 function _rolereference_names($rid) {
   static $names = array();
@@ -280,7 +242,7 @@ function rolereference_widget_settings($op, $widget) {
             'starts_with' => t('Starts with'),
             'contains' => t('Contains'),
           ),
-          '#description' => t('Select the method used to collect autocomplete suggestions. Note that <em>Contains</em> can cause performance issues on sites with thousands of nodes.'),
+          '#description' => t('Select the method used to collect autocomplete suggestions. Note that <em>Contains</em> can cause performance issues on sites with thousands of roles.'),
         );
       }
       else {
@@ -511,8 +473,8 @@ function rolereference_optionwidgets_validate($element, &$form_state) {
  * Validate an autocomplete element.
  *
  * Remove the wrapper layer and set the right element's value.
- * This will move the nested value at 'field-name-0-nid-nid'
- * back to its original location, 'field-name-0-nid'.
+ * This will move the nested value at 'field-name-0-rid-rid'
+ * back to its original location, 'field-name-0-rid'.
  */
 function rolereference_autocomplete_validate($element, &$form_state) {
   $field_name = $element['#field_name'];
@@ -521,7 +483,7 @@ function rolereference_autocomplete_validate($element, &$form_state) {
   $field_key  = $element['#columns'][0];
   $delta = $element['#delta'];
   $value = $element['#value'][$field_key];
-  $nid = NULL;
+  $rid = NULL;
   if (!empty($value)) {
     preg_match('/^(?:\s*|(.*) )?\[\s*rid\s*:\s*(\d+)\s*\]$/', $value, $matches);
     if (!empty($matches)) {
@@ -659,30 +621,6 @@ function rolereference_autocomplete($field_name, $string = '') {
   }
   drupal_json($matches);
 }
-
-/**
- * Implementation of hook_node_types.
- */
-function rolereference_node_type($op, $info) {
-  switch ($op) {
-    case 'update':
-      // Reflect type name changes to the 'referenceable types' settings.
-      if (!empty($info->old_type) && $info->old_type != $info->type) {
-        // content.module's implementation of hook_node_type() has already
-        // refreshed _content_type_info().
-        $fields = content_fields();
-        foreach ($fields as $field_name => $field) {
-          if ($field['type'] == 'rolereference' && isset($field['referenceable_types'][$info->old_type])) {
-            $field['referenceable_types'][$info->type] = empty($field['referenceable_types'][$info->old_type]) ? 0 : $info->type;
-            unset($field['referenceable_types'][$info->old_type]);
-            content_field_instance_update($field);
-          }
-        }
-      }
-      break;
-  }
-}
-
 
 /**
  * FAPI theme for an individual elements.
