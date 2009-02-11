@@ -21,6 +21,16 @@ function rolereference_menu() {
 }
 
 /**
+* Implementation of hook_views_api.
+*/
+function rolereference_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'rolereference') .'/views',
+  );
+}
+
+/**
  * Implementation of hook_theme().
  */
 function rolereference_theme() {
@@ -83,13 +93,19 @@ function rolereference_field_settings($op, $field) {
       $data = content_views_field_views_data($field);
       $db_info = content_database_info($field);
       $table_alias = content_views_tablename($field);
-
-      // Filter: swap the handler to the 'in' operator.
+      // Filter : swap the handler to the 'in' operator.
       $data[$table_alias][$field['field_name'] .'_rid']['filter']['handler'] = 'content_handler_filter_many_to_one';
-      // Argument: use role.name for summaries.
-      $data[$table_alias][$field['field_name'] .'_rid']['argument']['name table'] = 'role';
+      // Argument: get the role name for summaries.
+      // We need to join a new instance of the role table.
+      $data["role_$table_alias"]['table']['join']['node'] = array(
+        'table' => 'role',
+        'field' => 'rid',
+        'left_table' => $table_alias,
+        'left_field' => $field['field_name'] .'_rid',
+      );
+      $data[$table_alias][$field['field_name'] .'_rid']['argument']['name table'] = "role_$table_alias";
       $data[$table_alias][$field['field_name'] .'_rid']['argument']['name field'] = 'name';
-      // Relationship: add a relationship for related node.
+      // Relationship: Add a relationship for related role.
       $data[$table_alias][$field['field_name'] .'_rid']['relationship'] = array(
         'base' => 'role',
         'field' => $db_info['columns']['rid']['column'],
@@ -110,6 +126,7 @@ function rolereference_content_is_empty($item, $field) {
   }
   return FALSE;
 }
+
 
 /**
  * Implementation of hook_field_formatter_info().
