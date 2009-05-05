@@ -160,7 +160,7 @@ function theme_rolereference_formatter_default($element) {
 function _rolereference_names($rid) {
   static $names = array();
   if (!isset($names[$rid])) {
-    $name = db_result(db_query("SELECT name FROM {role} WHERE rid=%d", $rid));
+    $name = db_result(db_query("SELECT name FROM {role} WHERE rid = %d", $rid));
     $names[$rid] = $name ? $name : '';
   }
   return $names[$rid];
@@ -497,7 +497,7 @@ function rolereference_autocomplete_validate($element, &$form_state) {
   $field_name = $element['#field_name'];
   $type_name = $element['#type_name'];
   $field = content_fields($field_name, $type_name);
-  $field_key  = $element['#columns'][0];
+  $field_key = $element['#columns'][0];
   $delta = $element['#delta'];
   $value = $element['#value'][$field_key];
   $rid = NULL;
@@ -576,6 +576,112 @@ function rolereference_allowed_values($field) {
  *   )
  */
 function _rolereference_potential_references($field, $string = '', $match = 'contains', $ids = array(), $limit = NULL) {
+  static $results = array();
+
+  // Create unique id for static cache.
+  $cid = $field['field_name'] .':'. $match .':'. ($string !== '' ? $string : implode('-', $ids)) .':'. $limit;
+  if (!isset($results[$cid])) {
+    $references = FALSE;
+    if (module_exists('views') && !empty($field['advanced_view']) && $field['advanced_view'] != '--') {
+      $references = _rolereference_potential_references_views($field, $string, $match, $ids, $limit);
+    }
+    // If the view doesn't exist, we got FALSE, and fallback to the regular 'standard mode'.
+
+    if ($references === FALSE) {
+      $references = _rolereference_potential_references_standard($field, $string, $match, $ids, $limit);
+    }
+
+    // Store the results.
+    $results[$cid] = !empty($references) ? $references : array();
+  }
+
+  return $results[$cid];
+}
+
+/**
+ * Helper function for _nodereference_potential_references():
+ * case of Views-defined referenceable nodes.
+ */
+function _rolereference_potential_references_views($field, $string = '', $match = 'contains', $ids = array(), $limit = NULL) {
+  $view_name = $field['advanced_view'];
+
+  if ($view = views_get_view($view_name)) {
+    // We add a display, and let it derive from the 'default' display.
+    // TODO: We should let the user pick a display in the fields settings - sort of requires AHAH...
+    $display = $view->add_display('content_references');
+    $view->set_display($display);
+
+    // TODO from merlinofchaos on IRC : arguments using summary view can defeat the style setting.
+    // We might also need to check if there's an argument, and set *its* style_plugin as well.
+    $view->display_handler->set_option('style_plugin', 'content_php_array_autocomplete');
+    $view->display_handler->set_option('row_plugin', 'fields');
+    // Used in content_plugin_style_php_array::render(), to get
+    // the 'field' to be used as title.
+    $view->display_handler->set_option('content_title_field', 'name');
+
+    // Additional options to let content_plugin_display_references::query()
+    // narrow the results.
+    $options = array(
+      'table' => 'role',
+      'field_string' => 'name',
+      'string' => $string,
+      'match' => $match,
+      'field_id' => 'rid',
+      'ids' => $ids,
+    );
+    $view->display_handler->set_option('content_options', $options);
+
+    // TODO : for consistency, a fair amount of what's below
+    // should be moved to content_plugin_display_references
+
+    // Limit result set size.
+    if (isset($limit)) {
+      $view->display_handler->set_option('items_per_page', $limit);
+    }
+
+    // Get arguments for the view.
+    if (!empty($field['advanced_view_args'])) {
+      // TODO: Support Tokens using token.module ?
+      $view_args = array_map('trim', explode(',', $field['advanced_view_args']));
+    }
+    else {
+      $view_args = array();
+    }
+
+    // We do need title field, so add it if not present (unlikely, but...)
+    $fields = $view->get_items('field', $display);
+    if (!isset($fields['title'])) {
+      $view->add_item($display, 'field', 'role', 'name');
+    }
+
+    // If not set, make all fields inline and define a separator.
+    $options = $view->display_handler->get_option('row_options');
+    if (empty($options['inline'])) {
+      $options['inline'] = drupal_map_assoc(array_keys($view->get_items('field', $display)));
+    }
+    if (empty($options['separator'])) {
+      $options['separator'] = '-';
+    }
+    $view->display_handler->set_option('row_options', $options);
+
+    // Make sure the query is not cached
+    $view->is_cacheable = FALSE;
+
+    // Get the results.
+    $result = $view->execute_display($display, $view_args);
+  }
+  else {
+    $result = FALSE;
+  }
+
+  return $result;
+}
+
+/**
+ * Helper function for _nodereference_potential_references():
+ * referenceable nodes defined by content types.
+ */
+function _rolereference_potential_references_standard($field, $string = '', $match = 'contains', $ids = array(), $limit = NULL) {
   $related_types = array();
   $where = array();
   $args = array();
@@ -609,14 +715,13 @@ function _rolereference_potential_references($field, $string = '', $match = 'con
     $args = array_merge($args, $ids);
   }
 
-  $where_clause = $where ? 'WHERE ('. implode(') AND (', $where) .')' : '';
-  $sql = db_rewrite_sql("SELECT r.rid, r.name FROM {role} r $where_clause ORDER BY r.name");
-  $result = $limit ? db_query_range($sql, $args, 0, $limit) : db_query($sql, $args);
   $references = array();
-  while ($role = db_fetch_object($result)) {
-    $references[$role->rid] = array(
-      'title' => $role->name,
-      'rendered' => $role->name,
+  $where_clause = $where ? 'WHERE ('. implode(') AND (', $where) .')' : '';
+  $result = db_query('SELECT r.rid, r.name FROM {role} r '." $where_clause ORDER BY r.name ASC", $args);
+  while ($reference = db_fetch_object($result)) {
+    $references[$reference->rid] = array(
+      'title' => $reference->name,
+      'rendered' => check_plain($reference->name),
     );
   }
   return $references;
