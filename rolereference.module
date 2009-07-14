@@ -77,10 +77,59 @@ function rolereference_field_settings($op, $field) {
         '#default_value' => is_array($field['referenceable_types']) ? $field['referenceable_types'] : array(),
         '#options' => array_map('check_plain', user_roles(TRUE)),
       );
+      if (module_exists('views')) {
+        $views = array('--' => '--');
+        $all_views = views_get_all_views();
+        foreach ($all_views as $view) {
+          // Only 'users' views that have fields will work for our purpose.
+          if ($view->base_table == 'role' && !empty($view->display['default']->display_options['fields'])) {
+            if ($view->type == 'Default') {
+              $views[t('Default Views')][$view->name] = $view->name;
+            }
+            else {
+              $views[t('Existing Views')][$view->name] = $view->name;
+            }
+          }
+        }
+
+        $form['advanced'] = array(
+           '#type' => 'fieldset',
+           '#title' => t('Advanced - Roles that can be referenced (View)'),
+           '#collapsible' => TRUE,
+           '#collapsed' => !isset($field['advanced_view']) || $field['advanced_view'] == '--',
+         );
+        if (count($views) > 1) {
+          $form['advanced']['advanced_view'] = array(
+            '#type' => 'select',
+            '#title' => t('View used to select the roles'),
+            '#options' => $views,
+            '#default_value' => isset($field['advanced_view']) ? $field['advanced_view'] : '--',
+            '#description' =>  t('<p>Choose the "Views module" view that selects the roles that can be referenced.<br />Note:</p>') .
+              t('<ul><li>Only views that have fields will work for this purpose.</li><li>This will discard the "Referenceable Roles" settings above. Use the view\'s "filters" section instead.</li><li>Use the view\'s "fields" section to display additional informations about candidate users on user creation/edition form.</li><li>Use the view\'s "sort criteria" section to determine the order in which candidate users will be displayed.</li></ul>'),
+          );
+          $form['advanced']['advanced_view_args'] = array(
+            '#type' => 'textfield',
+            '#title' => t('View arguments'),
+            '#default_value' => isset($field['advanced_view_args']) ? $field['advanced_view_args'] : '',
+            '#required' => FALSE,
+            '#description' => t('Provide a comma separated list of arguments to pass to the view.'),
+          );
+        }
+        else {
+          $form['advanced']['no_view_help'] = array(
+            '#value' => t('<p>The list of roles that can be referenced can be based on a "Views module" view but no appropriate views were found. <br />Note:</p>') .
+              t('<ul><li>Only views that have fields will work for this purpose.</li><li>This will discard the "Referenceable Roles" settings above. Use the view\'s "filters" section instead.</li><li>Use the view\'s "fields" section to display additional informations about candidate users on user creation/edition form.</li><li>Use the view\'s "sort criteria" section to determine the order in which candidate users will be displayed.</li></ul>'),
+          );
+        }
+      }
       return $form;
 
     case 'save':
       $settings = array('referenceable_types');
+      if (module_exists('views')) {
+        $settings[] = 'advanced_view';
+        $settings[] = 'advanced_view_args';
+      }
       return $settings;
 
     case 'database columns':
@@ -109,6 +158,25 @@ function rolereference_field_settings($op, $field) {
       $data[$table_alias][$field['field_name'] .'_rid']['relationship'] = array(
         'base' => 'role',
         'field' => $db_info['columns']['rid']['column'],
+        'handler' => 'content_handler_relationship',
+        'label' => t($field['widget']['label']),
+        'content_field_name' => $field['field_name'],
+      );
+
+      $data["role_$table_alias"][$field['field_name'] .'_name'] = $data["role_$table_alias"][$field['field_name'] .'_rid'];
+      $data["role_$table_alias"][$field['field_name'] .'_name'] = array(
+        'group' => 'Content',
+        'title' => $data[$table_alias][$field['field_name'] . '_rid']['title'],
+        'field' => array(
+          'table' => 'role',
+          'field' => 'name',
+          'additional fields' => array('name' => 'name')
+        )
+      );
+      $data["role_$table_alias"][$field['field_name'] .'_name']['filter']['handler'] = 'content_handler_filter_many_to_one';
+      $data["role_$table_alias"][$field['field_name'] .'_name']['relationship'] = array(
+        'base' => 'role',
+        'field' => $db_info['columns']['name']['column'],
         'handler' => 'content_handler_relationship',
         'label' => t($field['widget']['label']),
         'content_field_name' => $field['field_name'],
@@ -765,4 +833,18 @@ function theme_rolereference_buttons($element) {
 
 function theme_rolereference_autocomplete($element) {
   return $element['#children'];
+}
+
+/**
+ * Implementation of hook_content_multigroup_allowed_widgets().
+ */
+function rolereference_content_multigroup_allowed_widgets() {
+  return array('rolereference_select', 'rolereference_buttons', 'rolereference_autocomplete');
+}
+
+/**
+ * Implementation of hook_content_multigroup_no_remove_widgets().
+ */
+function rolereference_content_multigroup_no_remove_widgets() {
+  return array('rolereference_select', 'rolereference_buttons', 'rolereference_autocomplete');
 }
