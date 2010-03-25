@@ -47,6 +47,12 @@ function rolereference_theme() {
     'rolereference_formatter_default' => array(
       'arguments' => array('element'),
     ),
+    'rolereference_formatter_rid' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'rolereference_formatter_rid_array' => array(
+      'arguments' => array('element' => NULL),
+    ),
   );
 }
 
@@ -206,6 +212,17 @@ function rolereference_field_formatter_info() {
       'field types' => array('rolereference'),
       'multiple values' => CONTENT_HANDLE_CORE,
     ),
+    'rid' => array(
+      'label' => t('Role ID'),
+      'field types' => array('rolereference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+    'rid_array' => array(
+      'label' => t('Array of Role IDs'),
+      'field types' => array('rolereference'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+    ),
+
   );
 }
 
@@ -218,6 +235,23 @@ function theme_rolereference_formatter_default($element) {
     $output = check_plain($name);
   }
   return $output;
+}
+
+/**
+ * Theme function for 'rid array' rolereference field formatter.
+ */
+function theme_rolereference_formatter_rid($element) {
+  return $element['#item']['rid'];
+}
+
+/**
+ * Theme function for 'rid array' rolereference field formatter.
+ */
+function theme_rolereference_formatter_rid_array($element) {
+  foreach (element_children($element) as $key){
+    $rid_array[] = $element[$key]['#item']['rid'];
+  }
+  return serialize($rid_array);
 }
 
 /**
