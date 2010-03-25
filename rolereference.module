@@ -75,7 +75,7 @@ function rolereference_field_settings($op, $field) {
         '#description' => t('Leaving all boxes unchecked will make all roles referenceable.'),
         '#multiple' => TRUE,
         '#default_value' => is_array($field['referenceable_types']) ? $field['referenceable_types'] : array(),
-        '#options' => array_map('check_plain', user_roles(TRUE)),
+        '#options' => array_map('check_plain', user_roles(FALSE)),
       );
       if (module_exists('views')) {
         $views = array('--' => '--');
