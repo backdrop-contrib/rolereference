@@ -407,7 +407,7 @@ function rolereference_autocomplete_value($element, $edit = FALSE) {
   $field_key  = $element['#columns'][0];
   if (!empty($element['#default_value'][$field_key])) {
     $rid = $element['#default_value'][$field_key];
-    $value = db_result(db_query(db_rewrite_sql('SELECT name FROM {role} WHERE rid = %d'), $rid));
+    $value = db_result(db_query('SELECT name FROM {role} WHERE rid = %d', $rid));
     $value .= ' [rid:'. $rid .']';
     return array($field_key => $value);
   }
