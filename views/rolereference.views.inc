@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 
 function rolereference_views_data() {
