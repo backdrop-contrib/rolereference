@@ -1,5 +1,7 @@
+; $Id$
 name = Role Reference
-description = Defines a field type for referencing roles.
-package = CCK
-core = 6.x
-dependencies[] = content
+description = Defines a field type for referencing a role from a node.
+package = Fields
+core = 7.x
+dependencies[] = field
+dependencies[] = options
