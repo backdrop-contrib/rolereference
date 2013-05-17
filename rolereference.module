@@ -244,7 +244,7 @@ function rolereference_potential_references($referenceable_roles) {
 
   if (empty($roles)) {
     foreach ($referenceable_roles as $rid => $enabled) {
-      if (!empty($enabled)) {
+      if (!empty($enabled) && isset($user_roles[$rid])) {
         $roles[$rid] = $user_roles[$rid];
       }
     }
