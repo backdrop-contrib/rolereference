@@ -253,3 +253,15 @@ function rolereference_potential_references($referenceable_roles) {
   }
   return $roles;
 }
+
+/**
+ * Implements hook_content_migrate_field_alter().
+ */
+function rolereference_content_migrate_field_alter(&$field_value, $instance_value) {
+  switch ($instance_value['widget']['module']) {
+    case 'rolereference':
+      $field_value['settings']['referenceable_roles'] = $field_value['settings']['referenceable_types'];
+      unset($field_value['settings']['referenceable_types']);
+      break;
+  }
+}
