@@ -266,3 +266,25 @@ function rolereference_content_migrate_field_alter(&$field_value, $instance_valu
       break;
   }
 }
+
+/**
+ * Implements hook_field_extract_info().
+ *
+ * This provides integration for the field_extract module,
+ * making it easy to get the value of a rolereference field.
+ *
+ *   Example: field_extract_value('node', $node, 'field_subscriber_role');
+ *
+ * @return $extractors
+ *   array: field_extract info for rolereference module.
+ */
+function rolereference_field_extract_info() {
+  $extractors = array(
+    'rolereference' => array(
+      'options' => array(
+        'key' => 'rid',
+      ),
+    ),
+  );
+  return $extractors;
+}
