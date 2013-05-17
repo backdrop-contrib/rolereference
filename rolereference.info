@@ -1,4 +1,3 @@
-; $Id$
 name = Role Reference
 description = Defines a field type for referencing a role from a node.
 package = Fields
