@@ -46,13 +46,14 @@ function rolereference_field_settings_form($field, $instance, $has_data) {
   $settings = $field['settings'];
 
   $form = array();
+  $role_options = array_map('check_plain', user_roles());
   $form['referenceable_roles'] = array(
     '#type'          => 'checkboxes',
     '#title'         => t('Roles that can be referenced'),
     '#description'   => t('Select roles that may be referenced by this field. All roles will be available if none are checked.'),
     '#multiple'      => TRUE,
     '#default_value' => is_array($settings['referenceable_roles']) ? $settings['referenceable_roles'] : array(),
-    '#options'       => user_roles(),
+    '#options'       => $role_options,
     '#disabled'      => $has_data,
   );
   return $form;
@@ -169,7 +170,7 @@ function rolereference_field_formatter_view($entity_type, $entity, $field, $inst
   switch ($display['type']) {
     case 'rolereference_default':
       foreach ($items as $delta => $item) {
-        $element[$delta] = array('#markup' => $item['role']);
+        $element[$delta] = array('#markup' => check_plain($item['role']));
       }
       break;
   }
