@@ -288,3 +288,35 @@ function rolereference_field_extract_info() {
   );
   return $extractors;
 }
+
+/**
+ * Implements feeds_processor_targets_alter().
+ */
+function rolereference_feeds_processor_targets_alter(&$targets, $entity_type, $bundle_name) {
+  // Set up feeds mapper for rolereference fields.
+  foreach (field_info_instances($entity_type, $bundle_name) as $name => $instance) {
+    $info = field_info_field($name);
+    if ($info['type'] == 'rolereference') {
+      $targets[$name] = array(
+        'name' => check_plain($instance['label']),
+        'description' => t('Role reference field.'),
+        'callback' => 'rolereference_set_target',
+      );
+    }
+  }
+}
+
+/**
+ * Feeds callback to set mapping target.
+ */
+function rolereference_set_target($source, $entity, $target, array $values, $mapping) {
+  // Process rolereference field data.
+  $info = field_info_field($target);
+  if ($info['type'] == 'rolereference') {
+    foreach ($values as $rid) {
+      if (!empty($rid)) {
+        $entity->{$target}[$entity->language][] = array('rid' => $rid);
+      }
+    }
+  }
+}
