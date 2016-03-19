@@ -223,7 +223,7 @@ function rolereference_field_views_data($field) {
     if (isset($data[$table])) {
       $data[$table][$id_column]['relationship'] = array(
         'base' => 'role',
-        'field' => 'rid',
+        'field' => $columns['rid'],
         'base field' => 'rid',
         'label' => $field['field_name'],
       );
