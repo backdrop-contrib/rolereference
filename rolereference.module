@@ -11,7 +11,6 @@ function rolereference_field_info() {
       'settings' => array('referenceable_roles' => array()),
       'default_widget' => 'options_select',
       'default_formatter' => 'rolereference_default',
-      'property_type' => 'integer',
     ),
   );
 }
@@ -22,8 +21,8 @@ function rolereference_field_info() {
 function rolereference_field_schema($field) {
   $columns = array(
     'rid' => array(
-      'type' => 'int',
-      'unsigned' => TRUE,
+      'type' => 'varchar',
+      'length' => 64,
       'not null' => FALSE,
     ),
   );
@@ -48,13 +47,13 @@ function rolereference_field_settings_form($field, $instance, $has_data) {
   $form = array();
   $role_options = array_map('check_plain', user_roles());
   $form['referenceable_roles'] = array(
-    '#type'          => 'checkboxes',
-    '#title'         => t('Roles that can be referenced'),
-    '#description'   => t('Select roles that may be referenced by this field. All roles will be available if none are checked.'),
-    '#multiple'      => TRUE,
+    '#type' => 'checkboxes',
+    '#title' => t('Roles that can be referenced'),
+    '#description' => t('Select roles that may be referenced by this field. All roles will be available if none are checked.'),
+    '#multiple' => TRUE,
     '#default_value' => is_array($settings['referenceable_roles']) ? $settings['referenceable_roles'] : array(),
-    '#options'       => $role_options,
-    '#disabled'      => $has_data,
+    '#options' => $role_options,
+    '#disabled' => $has_data,
   );
   return $form;
 }
@@ -71,6 +70,8 @@ function rolereference_field_validate($entity_type, $entity, $field, $instance, 
   $ids = array();
 
   // First check non-numeric rid's to avoid losing time with them.
+  // BACKDROP REMOVED: RIDs no longer numeric
+  /*
   foreach ($items as $delta => $item) {
     if (is_array($item) && !empty($item['rid'])) {
       if (is_numeric($item['rid'])) {
@@ -85,6 +86,8 @@ function rolereference_field_validate($entity_type, $entity, $field, $instance, 
       }
     }
   }
+  */
+
   // Prevent performance hog if there are no ids to check.
   if ($ids) {
     $referenceable_roles = rolereference_potential_references($field['settings']['referenceable_roles'], $field['field_name']);
@@ -152,14 +155,18 @@ function rolereference_field_is_empty($item, $field) {
 function rolereference_field_formatter_info() {
   $ret = array(
     'rolereference_default' => array(
-      'label'       => t('Title'),
-      'description' => t('Display the title of the referenced role.'),
+      'label' => t('Label'),
+      'description' => t('Display the label of the referenced role.'),
+      'field types' => array('rolereference'),
+    ),
+    'rolereference_rid' => array(
+      'label' => t('Machine name'),
+      'description' => t('Display the machine name of the referenced role.'),
       'field types' => array('rolereference'),
     ),
   );
   return $ret;
 }
-
 
 /**
  * Implements hook_field_formatter_view().
@@ -169,10 +176,18 @@ function rolereference_field_formatter_view($entity_type, $entity, $field, $inst
 
   switch ($display['type']) {
     case 'rolereference_default':
+      
+      // TODO: Backdrop change this is potentially performance costly
+      $user_roles = user_roles();      
       foreach ($items as $delta => $item) {
-        $element[$delta] = array('#markup' => check_plain($item['role']));
+        $element[$delta] = array('#markup' => check_plain($user_roles[$item['rid']]));
       }
-      break;
+    break;
+    case 'rolereference_rid':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => check_plain($item['rid']));
+      }
+    break;
   }
 
   return $element;
@@ -193,14 +208,13 @@ function rolereference_options_list($field) {
   return rolereference_potential_references($field['settings']['referenceable_roles'], $field['field_name']);
 }
 
-
 /**
  * Implements hook_views_api().
  */
 function rolereference_views_api() {
   return array(
     'api' => '3.0',
-    'path' => drupal_get_path('module', 'rolereference') . '/includes',
+    'path' => backdrop_get_path('module', 'rolereference') . '/includes',
   );
 }
 
@@ -213,9 +227,7 @@ function rolereference_views_api() {
  */
 function rolereference_field_views_data($field) {
   $data = field_views_field_default_views_data($field);
-
   $storage = $field['storage']['details']['sql'];
-
   foreach ($storage as $age => $table_data) {
     $table = key($table_data);
     $columns = current($table_data);
@@ -230,6 +242,19 @@ function rolereference_field_views_data($field) {
     }
   }
 
+  $data['field_data_field_roles_testing']['Test'] = [
+    'title' => t('Test'),
+    'help' => t('Relate example content to the number'),
+    'relationship' => [
+    // Table you want to join to. (custom user field) 
+      'base' => 'field_data_field_roles_testing',
+       // Column you want to Join to. aka field
+      'base field' => 'entity_id',
+      'id' => 'standard',
+      'label' => t('Some thing funny here.'),
+    ],
+  ];
+  
   return $data;
 }
 
@@ -239,7 +264,7 @@ function rolereference_field_views_data($field) {
  * @param {array} $referenceable_roles
  */
 function rolereference_potential_references($referenceable_roles, $field_name) {
-  $roles = &drupal_static('rolereference_' . $field_name, array());
+  $roles = &backdrop_static('rolereference_' . $field_name, array());
   $user_roles = user_roles();
 
   if (empty($roles)) {
@@ -319,4 +344,15 @@ function rolereference_set_target($source, $entity, $target, array $values, $map
       }
     }
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function rolereference_autoload_info() {
+  return array(
+    'rolereference_views_plugin_argument_default_current_user' => 'includes/rolereference_views_plugin_argument_default_current_user.inc',
+    'rolereference_views_plugin_display' => 'includes/rolereference_views_plugin_display.inc',
+    'rolereference_views_plugin_style' => 'includes/rolereference_views_plugin_style.inc',
+  );
 }

@@ -39,11 +39,11 @@ class rolereference_views_plugin_display extends views_plugin_display {
       );
       $clause = isset($match_clauses[$options['match']]) ? $match_clauses[$options['match']] : $match_clauses['contains'];
       $alias = $this->view->query->ensure_table($options['table']);
-      $this->view->query->add_where(NULL, "$alias.$options[field_string]", $clause['value'], $clause['operator']);
+      $this->view->query->add_where(NULL, "$alias.$options [field_string]", $clause['value'], $clause['operator']);
     }
     elseif ($options['ids']) {
       $alias = $this->view->query->ensure_table($options['table']);
-      $this->view->query->add_where(NULL, "$alias.$options[field_id]", $options['ids'], 'IN');
+      $this->view->query->add_where(NULL, "$alias.$options [field_id]", $options['ids'], 'IN');
     }
   }
 }

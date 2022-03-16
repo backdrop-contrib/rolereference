@@ -1,11 +1,9 @@
 name = Role Reference
 description = Defines a field type for referencing a role from a node.
 package = Fields
-core = 7.x
+backdrop = 1.x
+type = module
 dependencies[] = field
 dependencies[] = options
 
 ; Views plugins
-files[] = includes/rolereference_views_plugin_argument_default_current_user.inc
-files[] = includes/rolereference_views_plugin_display.inc
-files[] = includes/rolereference_views_plugin_style.inc
