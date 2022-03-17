@@ -29,8 +29,8 @@ Credits
 -------
 
 - Ported to Backdrop CMS by [Eric Toupin](https://github.com/eric2pin).
-- Originally written for Drupal by [David N](https://www.drupal.org/u/deekayen).
-- Inital development sponsored by Classic Graphics (no website).
+- Originally written for Drupal by [David Norman](https://github.com/deekayen).
+- Inital development sponsored by Classic Graphics (website defunct).
 
 License
 -------
