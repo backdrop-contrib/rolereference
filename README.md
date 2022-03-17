@@ -1,18 +1,39 @@
-WHAT IT DOES:
--------------
-This module adds a new field type for referencing roles in content types.
-The module provides basic views integration.
+Role Reference
+======================
 
-TO INSTALL:
------------
-Nothing special. Drop the rolereference folder into the 'modules'
-directory of your Backdrop CMS installation.
+The role reference adds a field type which can be used to reference user
+roles. It also provides basic views integration for said field.
 
-BUGS & ISSUES:
---------------
-Original: http://drupal.org/project/issues/rolereference
-Current: https://github.com/eric2pin/rolereference
+Installation
+------------
 
-SPONSOR:
---------
-Legacy: Classic Graphics <http://www.cgraphics.com/>
+- Install this module using the official Backdrop CMS instructions at
+  https://docs.backdropcms.org/documentation/extend-with-modules.
+
+- There is no module configuration.
+
+Issues
+------
+
+None yet. Be the first to report one!
+
+Bugs and feature requests should be reported in [the Issue Queue](https://github.com/backdrop-contrib/rolereference/issues).
+
+Current Maintainers <!-- This section is required. -->
+-------------------
+
+- [Eric Toupin](https://github.com/eric2pin).
+
+
+Credits
+-------
+
+- Ported to Backdrop CMS by [Eric Toupin](https://github.com/eric2pin).
+- Originally written for Drupal by [David N](https://www.drupal.org/u/deekayen).
+- Inital development sponsored by Classic Graphics (no website).
+
+License
+-------
+
+This project is GPL v2 software.
+See the LICENSE.txt file in this directory for complete text.
