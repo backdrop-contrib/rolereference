@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * This is the module file that contains role reference field definition
+ */
+
+/**
  * Implements hook_field_info().
  */
 function rolereference_field_info() {
@@ -176,9 +181,8 @@ function rolereference_field_formatter_view($entity_type, $entity, $field, $inst
 
   switch ($display['type']) {
     case 'rolereference_default':
-      
       // TODO: Backdrop change this is potentially performance costly
-      $user_roles = user_roles();      
+      $user_roles = user_roles();
       foreach ($items as $delta => $item) {
         $element[$delta] = array('#markup' => check_plain($user_roles[$item['rid']]));
       }
@@ -218,7 +222,6 @@ function rolereference_views_api() {
   );
 }
 
-
 /**
  * Implements hook_field_views_data().
  *
@@ -246,7 +249,7 @@ function rolereference_field_views_data($field) {
     'title' => t('Test'),
     'help' => t('Relate example content to the number'),
     'relationship' => [
-    // Table you want to join to. (custom user field) 
+    // Table you want to join to. (custom user field)
       'base' => 'field_data_field_roles_testing',
        // Column you want to Join to. aka field
       'base field' => 'entity_id',
@@ -254,7 +257,7 @@ function rolereference_field_views_data($field) {
       'label' => t('Some thing funny here.'),
     ],
   ];
-  
+
   return $data;
 }
 
@@ -351,8 +354,8 @@ function rolereference_set_target($source, $entity, $target, array $values, $map
  */
 function rolereference_autoload_info() {
   return array(
-    'rolereference_views_plugin_argument_default_current_user' => 'includes/rolereference_views_plugin_argument_default_current_user.inc',
-    'rolereference_views_plugin_display' => 'includes/rolereference_views_plugin_display.inc',
-    'rolereference_views_plugin_style' => 'includes/rolereference_views_plugin_style.inc',
+    'RolereferenceViewsPluginArgumentDefaultCurrentUser' => 'includes/Rolereference_views_plugin_argument_default_current_user.inc',
+    'RolereferenceViewsPluginDisplay' => 'includes/RolereferenceViewsPluginDisplay.inc',
+    'RolereferenceViewsPluginStyle' => 'includes/RolereferenceViewsPluginStyle.inc',
   );
 }

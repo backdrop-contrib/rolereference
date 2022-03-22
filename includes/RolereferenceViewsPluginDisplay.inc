@@ -1,23 +1,38 @@
 <?php
-// $Id$
-
 /**
  * @file
  * Handler for node_reference_views_plugin_display.
  */
-class rolereference_views_plugin_display extends views_plugin_display {
+
+ /**
+  * Views plugin display
+  */
+class RolereferenceViewsPluginDisplay extends views_plugin_display {
+
+  /**
+   * Execute
+   */
   function execute() {
     return $this->view->render($this->display->id);
   }
 
+  /**
+   * Render or return null
+   */
   function render() {
     return !empty($this->view->result) || !empty($this->view->style_plugin->definition['even empty']) ? $this->view->style_plugin->render($this->view->result) : '';
   }
 
+  /**
+   * Defaults to global user
+   */
   function uses_exposed() {
     return FALSE;
   }
 
+  /**
+   * Add db_driver appropriate LIKE to query
+   */
   function query() {
     $options = $this->get_option('rolereference_options');
 

@@ -1,11 +1,13 @@
 <?php
-// $Id$
-
 /**
  * @file
  * Handler for node_reference_views_plugin_style.
  */
-class rolereference_views_plugin_style extends views_plugin_style {
+class RolereferenceViewsPluginStyle extends views_plugin_style {
+
+  /**
+   * Prepare our rendered results
+   */
   function render() {
     $results = array();
 
