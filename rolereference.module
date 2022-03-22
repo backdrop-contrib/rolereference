@@ -354,7 +354,7 @@ function rolereference_set_target($source, $entity, $target, array $values, $map
  */
 function rolereference_autoload_info() {
   return array(
-    'RolereferenceViewsPluginArgumentDefaultCurrentUser' => 'includes/Rolereference_views_plugin_argument_default_current_user.inc',
+    'RolereferenceViewsPluginArgumentDefaultCurrentUser' => 'includes/RolereferenceViewsPluginArgumentDefaultCurrentUser.inc',
     'RolereferenceViewsPluginDisplay' => 'includes/RolereferenceViewsPluginDisplay.inc',
     'RolereferenceViewsPluginStyle' => 'includes/RolereferenceViewsPluginStyle.inc',
   );

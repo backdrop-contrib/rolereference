@@ -10,7 +10,6 @@
  * This plugin actually has no options so it does not need to do a great deal.
  */
 class RolereferenceViewsPluginArgumentDefaultCurrentUser extends views_plugin_argument_default {
-
   /**
    * Default current user argument
    */
