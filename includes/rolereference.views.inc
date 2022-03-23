@@ -1,24 +1,24 @@
 <?php
 /**
  * @file
- * Interface between node_reference.module and views.module.
+ * Interface between rolereference.module and views.module.
  */
 
 /**
  * Implements hook_views_plugins().
  *
  * Defines some plugins used by the Views modes for
- * node_reference.
+ * rolereference.
  */
 function rolereference_views_plugins() {
   $plugins = array(
     //'module' => 'rolereference', // This just tells our themes are elsewhere.
     'display' => array(
-      'RolereferenceViewsPluginDisplay' => array(
+      'rolereference_views_plugin_display' => array(
         'path' => backdrop_get_path('module', 'rolereference') . '/includes',
         'title' => 'Role reference',
         'help' => 'Destination-agnostic display. Mostly useful for programmatic views.',
-        'handler' => 'RolereferenceViewsPluginDisplay.inc',
+        'handler' => 'rolereference_views_plugin_display.inc',
         'no ui' => TRUE, // Programmatic use only.
         'uses hook menu' => FALSE,
         'use ajax' => FALSE,
@@ -27,11 +27,11 @@ function rolereference_views_plugins() {
       ),
     ),
     'style' => array(
-      'RolereferenceViewsPluginStyle' => array(
+      'rolereference_views_plugin_style' => array(
         'path' => backdrop_get_path('module', 'rolereference') . '/includes',
         'title' => 'Results array (with title)',
         'help' => 'Returns the view as a PHP array of names + rendered rows.',
-        'handler' => 'RolereferenceViewsPluginStyle.inc',
+        'handler' => 'rolereference_views_plugin_style.inc',
         'no ui' => TRUE, // Programmatic use only.
         'uses row plugin' => TRUE,
         'uses fields' => TRUE,
@@ -43,7 +43,7 @@ function rolereference_views_plugins() {
       'rolereference_current_roles' => array(
         'title' => t('User Roles IDs from logged in user'),
         'path' => backdrop_get_path('module', 'rolereference') . '/includes',
-        'handler' => 'RolereferenceViewsPluginArgumentDefaultCurrentUser.inc',
+        'handler' => 'rolereference_views_plugin_argument_default_current_user.inc',
       ),
     ),
   );

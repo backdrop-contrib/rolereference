@@ -1,4 +1,5 @@
   <?php
+
 /**
  * @file
  * Contains the current user argument default plugin.
@@ -9,9 +10,10 @@
  *
  * This plugin actually has no options so it does not need to do a great deal.
  */
-class RolereferenceViewsPluginArgumentDefaultCurrentUser extends views_plugin_argument_default {
+class rolereference_views_plugin_argument_default_current_user extends views_plugin_argument_default {
+
   /**
-   * Default current user argument
+   * Required definition for default argument
    */
   function get_argument() {
     global $user;

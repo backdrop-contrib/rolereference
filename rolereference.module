@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * This is the module file that contains role reference field definition
+ * Contains the base field information for role reference fields
  */
 
 /**
@@ -181,6 +180,7 @@ function rolereference_field_formatter_view($entity_type, $entity, $field, $inst
 
   switch ($display['type']) {
     case 'rolereference_default':
+
       // TODO: Backdrop change this is potentially performance costly
       $user_roles = user_roles();
       foreach ($items as $delta => $item) {
@@ -221,6 +221,7 @@ function rolereference_views_api() {
     'path' => backdrop_get_path('module', 'rolereference') . '/includes',
   );
 }
+
 
 /**
  * Implements hook_field_views_data().
@@ -354,8 +355,8 @@ function rolereference_set_target($source, $entity, $target, array $values, $map
  */
 function rolereference_autoload_info() {
   return array(
-    'RolereferenceViewsPluginArgumentDefaultCurrentUser' => 'includes/RolereferenceViewsPluginArgumentDefaultCurrentUser.inc',
-    'RolereferenceViewsPluginDisplay' => 'includes/RolereferenceViewsPluginDisplay.inc',
-    'RolereferenceViewsPluginStyle' => 'includes/RolereferenceViewsPluginStyle.inc',
+    'rolereference_views_plugin_argument_default_current_user' => 'includes/rolereference_views_plugin_argument_default_current_user.inc',
+    'rolereference_views_plugin_display' => 'includes/rolereference_views_plugin_display.inc',
+    'rolereference_views_plugin_style' => 'includes/rolereference_views_plugin_style.inc',
   );
 }
